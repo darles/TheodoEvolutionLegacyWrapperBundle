@@ -62,7 +62,7 @@ class CodeIgniterClassLoader implements LegacyClassLoaderInterface
         $this->kernel->getContainer()->set('EXT', $EXT);
 
         // Is there a "pre_system" hook?
-        $EXT->_call_hook('pre_system');
+        $EXT->call_hook('pre_system');
 
         // Instantiate the config class
         $CFG = load_class('Config', 'core');
@@ -86,7 +86,6 @@ class CodeIgniterClassLoader implements LegacyClassLoaderInterface
 
         // Instantiate the routing class and set the routing
         $RTR = load_class('Router', 'core');
-        $RTR->_set_routing();
         $GLOBALS['RTR'] =$RTR;
         $this->kernel->getContainer()->set('RTR', $RTR);
 
@@ -101,7 +100,7 @@ class CodeIgniterClassLoader implements LegacyClassLoaderInterface
         $this->kernel->getContainer()->set('OUT', $OUT);
 
         // Is there a valid cache file?  If so, we're done...
-        if ($EXT->_call_hook('cache_override') === false) {
+        if ($EXT->call_hook('cache_override') === false) {
             if ($OUT->_display_cache($CFG, $URI) == true) {
                 exit;
             }

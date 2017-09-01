@@ -84,7 +84,7 @@ namespace Theodo\Evolution\Bundle\LegacyWrapperBundle\Kernel {
             }
 
             // Is there a "pre_controller" hook?
-            $EXT->_call_hook('pre_controller');
+            $EXT->call_hook('pre_controller');
 
             // Instantiate the requested controller
             // Mark a start point so we can benchmark the controller
@@ -93,7 +93,7 @@ namespace Theodo\Evolution\Bundle\LegacyWrapperBundle\Kernel {
             $CI = new $class();
 
             // Is there a "post_controller_constructor" hook?
-            $EXT->_call_hook('post_controller_constructor');
+            $EXT->call_hook('post_controller_constructor');
 
             // Call the requested method
             // Is there a "remap" function? If so, we call it instead
@@ -133,15 +133,15 @@ namespace Theodo\Evolution\Bundle\LegacyWrapperBundle\Kernel {
             $BM->mark('controller_execution_time_( ' . $class . ' / ' . $method . ' )_end');
 
             // Is there a "post_controller" hook?
-            $EXT->_call_hook('post_controller');
+            $EXT->call_hook('post_controller');
 
             // Send the final rendered output to the browser
-            if ($EXT->_call_hook('display_override') === false) {
+            if ($EXT->call_hook('display_override') === false) {
                 $OUT->_display();
             }
 
             // Is there a "post_system" hook?
-            $EXT->_call_hook('post_system');
+            $EXT->call_hook('post_system');
 
             // Close the DB connection if one exists
             if (class_exists('CI_DB') AND isset($CI->db)) {
@@ -176,6 +176,8 @@ namespace Theodo\Evolution\Bundle\LegacyWrapperBundle\Kernel {
 
             // Defines constants as it is done in the index.php file of your CodeIgniter project.
             define('ENVIRONMENT', $this->options['environment']);
+            define('ICONV_ENABLED', false);
+            define('MB_ENABLED', false);
             define('CI_VERSION', $this->options['version']);
             define('CI_CORE', $this->options['core']);
 
@@ -211,6 +213,42 @@ namespace Theodo\Evolution\Bundle\LegacyWrapperBundle\Kernel {
             // The path to the "sparks" folder
             define('SPARKPATH', $this->getRootDir() . '/sparks/');
 
+            // The path to the "views" directory
+            if ( ! isset($view_folder[0]) && is_dir(APPPATH.'views'.DIRECTORY_SEPARATOR))
+            {
+                $view_folder = APPPATH.'views';
+            }
+            elseif (is_dir($view_folder))
+            {
+                if (($_temp = realpath($view_folder)) !== FALSE)
+                {
+                    $view_folder = $_temp;
+                }
+                else
+                {
+                    $view_folder = strtr(
+                        rtrim($view_folder, '/\\'),
+                        '/\\',
+                        DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR
+                    );
+                }
+            }
+            elseif (is_dir(APPPATH.$view_folder.DIRECTORY_SEPARATOR))
+            {
+                $view_folder = APPPATH.strtr(
+                        trim($view_folder, '/\\'),
+                        '/\\',
+                        DIRECTORY_SEPARATOR.DIRECTORY_SEPARATOR
+                    );
+            }
+            else
+            {
+                header('HTTP/1.1 503 Service Unavailable.', TRUE, 503);
+                echo 'Your view folder path does not appear to be set correctly. Please open the following file and correct this: '.SELF;
+                exit(3); // EXIT_CONFIG
+            }
+
+            define('VIEWPATH', $view_folder.DIRECTORY_SEPARATOR);
 
             if (empty($this->classLoader)) {
                 throw new \RuntimeException('You must provide a class loader to the CodeIgniter kernel.');
